@@ -9,12 +9,17 @@
 import os
 import re
 
-test_mode = True
+test_mode = False
 
 
 def clear():
     foo = False
     count = 0
+
+    article_loc = ""
+    img_loc = ""
+    file_list = []
+    img_list = []
     while not foo and count <= 5:
         try:
             if test_mode:
@@ -39,7 +44,9 @@ def clear():
             if test_mode:
                 img_loc = r"D:\Users\OneDrive\WRITINGS\test.assets"
             else:
-                img_loc = input("input the imgs location: ")
+                img_loc = input("input the imgs location（Leave it empty to use default folder）: \n")
+                if img_loc == "":
+                    img_loc = article_loc.replace('.md','.assets')
             for a,b,c in os.walk(img_loc):
                 file_list = c
                 print(file_list)
@@ -49,6 +56,7 @@ def clear():
             count += 1
             if count > 5:
                 os._exit(0)
+
     flag = False
     for file in file_list:
         if file not in img_list:
@@ -57,7 +65,6 @@ def clear():
             flag = True
     if flag == False:
         print("Good, no redundant imgs.")
-
 
 
 if __name__ == '__main__':
