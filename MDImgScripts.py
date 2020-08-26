@@ -11,7 +11,7 @@ import re
 import json
 import sys
 import time
-import urllib
+from urllib.parse import quote
 
 import oss2
 
@@ -117,7 +117,7 @@ class ImgMD:
         flag = False
         for file in self.assets_list:
             # typora中使用了自动转url
-            u_file = urllib.parse.quote(file)
+            u_file = quote(file)
             if u_file not in self.imgs_list:
                 os.remove(self.assets_loc + '\\' + file)
                 print(file + " is removed.")
