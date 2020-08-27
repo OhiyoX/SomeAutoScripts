@@ -14,7 +14,11 @@ import time
 from urllib.parse import quote, unquote
 
 # 阿里云OSS的SDK
-import oss2
+try:
+    import oss2
+except ModuleNotFoundError:
+    print('Oss2 Module not found, try "pip install oss2". ')
+    os._exit(0)
 
 # 配置
 config = {
@@ -280,9 +284,6 @@ class ImgMD:
 if __name__ == '__main__':
     md = ImgMD()
     md.clear_img()
-    u = input('upload?')
-    result = False
-    if u == 'y':
-        result = md.upload()
+    result = md.upload()
     if result:
         md.change_img_url()
