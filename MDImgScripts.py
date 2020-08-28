@@ -29,8 +29,8 @@ except ModuleNotFoundError:
 # 配置
 config = {
     "test_mode": False,  # 调试模式
-    "date": {'year': '2019',  # 设置图床日期
-             'month': '3'
+    "date": {'year': '',  # 设置图床日期
+             'month': ''
              },
     'dir_loc': 'blogimg',  # 设置图床文件夹
     'rule': '!xwbp'  #设置默认上传的图片规则，以!标识
@@ -153,7 +153,6 @@ class ImgMD:
     def get_name_from_url(self,img_url):
         if '/' and 'http' in img_url:
             # 是链接
-
             if 'https://mmbiz.qpic.cn/' in img_url:
                 # 是微信订阅号图片
                 img_info = re.search('https://mmbiz.qpic.cn/(.*)', img_url).group(1)
@@ -182,7 +181,6 @@ class ImgMD:
             u_file = quote(file)  # typora中使用了unicode-escape
             if u_file not in self.imgs_list and file not in self.imgs_list:
                 redundant_list.append(self.assets_path + '\\' + file)
-
                 flag = True
         for x in redundant_list:
             os.remove(x)
