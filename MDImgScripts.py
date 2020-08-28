@@ -196,7 +196,6 @@ class ImgMD:
                 print('It seems not in remote, try upload it.')
                 self.upload(img_url)
 
-
             # 替换图片url
             if exist:
                 remote_img_url = remote_img_url.replace('https://','')
@@ -245,6 +244,13 @@ class ImgMD:
                 img_count += 1
                 continue
             else:
+                # progress_callback为可选参数，用于实现进度条功能
+                def percentage(consumed_bytes, total_bytes):
+                    if total_bytes:
+                        rate = int(100 * (float(consumed_bytes) / float(total_bytes)))
+                        print('\r{0}% '.format(rate), end='')
+                        sys.stdout.flush()
+
                 if img in self.assets_list:
                     img_loc = assets_loc + '\\' + img
                     remote_img_loc = self.remote_dir_loc + '/' + assets_name + '/' + img
@@ -255,7 +261,7 @@ class ImgMD:
                                               multipart_threshold=200 * 1024,
                                               part_size=100 * 1024,
                                               num_threads=3,
-                                              progress_callback=self.percentage)
+                                              progress_callback=percentage)
                         print(', ' + img + ' is successfully uploaded.')
                     else:
                         print(img + " already exists, next...")
@@ -272,13 +278,6 @@ class ImgMD:
     def re_upload(self,img_url):
         """将网络上的图片转到图床里"""
         pass
-
-    # progress_callback为可选参数，用于实现进度条功能
-    def percentage(self, consumed_bytes, total_bytes):
-        if total_bytes:
-            rate = int(100 * (float(consumed_bytes) / float(total_bytes)))
-            print('\r{0}% '.format(rate), end='')
-            sys.stdout.flush()
 
 
 if __name__ == '__main__':
