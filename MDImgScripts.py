@@ -377,7 +377,6 @@ class ImgMD:
                 self.content = self.content.replace(img_url, 'https://' + quote(remote_img_url) + config['style'])
                 modify_flag = True
 
-
         if modify_flag:
             # 备份原文档
             with open(self.article_path + '-' + str(int(time.time())) + '.original', 'w', encoding="UTF-8") as bkup:
@@ -390,7 +389,7 @@ class ImgMD:
             print('No img url needs to replace.')
 
         # 为微信公众号做一个特别版
-        content_w = self.content.replace(config['style'],'!xweixin')
+        content_w = self.content.replace(config['style'],config['weixin'])
         with open(self.article_path.replace('.md', '') + '-weixin-edition.md', 'w', encoding="UTF-8") as w:
             w.write(content_w)
         print('Generated weixin-edition.')

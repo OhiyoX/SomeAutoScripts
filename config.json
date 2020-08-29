@@ -1,11 +1,12 @@
 {
-    "test_mode": true,
+    "test_mode": false,
     "date": {"year": "",
              "month": ""
              },
     "clear_local_assets": true,
     "dir_loc": "blogimg",
     "style": "!xwbp",
+    "weixin": "!xweixin",
     "re_loc": true,
     "delete_old_remote": true
 }
