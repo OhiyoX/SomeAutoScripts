@@ -33,8 +33,8 @@ except ModuleNotFoundError:
 # 配置
 config = {
     "test_mode": True,  # 调试模式
-    "date": {'year': '2019',  # 设置图床日期
-             'month': '7'
+    "date": {'year': '2019',  # 设置文件夹日期，留空默认为本年
+             'month': '2' # 设置文件夹日期，留空默认为本月
              },
     'clear_local_assets': True,
     'dir_loc': 'blogimg',  # 设置图床文件夹
@@ -339,7 +339,8 @@ class ImgMD:
         imgs_url_list = self.get_imgs_list(force=False, url=True)
         remote_domain_prefix = self.__concat(self.bucket_domain, remote_dir_loc)
         modify_flag = False
-        content = self.content
+        content_o = self.content # 原内容
+        content_w = self.content # 微信内容
         for img_url in imgs_url_list:
             img = unquote(self.get_name_from_url(img_url))
             u_img = quote(img)
@@ -370,18 +371,26 @@ class ImgMD:
             # 替换图片url
             if exist:
                 remote_img_url = remote_img_url.replace('https://', '')
+                content_w = content_w.replace(img_url, 'https://' + quote(remote_img_url) + '!xweixin')
                 self.content = self.content.replace(img_url, 'https://' + quote(remote_img_url) + config['style'])
                 modify_flag = True
 
         if modify_flag:
             # 备份原文档
-            with open(self.article_path + '.original', 'w', encoding="UTF-8") as bkup:
-                bkup.write(content)
+            with open(self.article_path + '-' + str(int(time.time())) + '.original', 'w', encoding="UTF-8") as bkup:
+                bkup.write(content_o)
             # 开始替换图片url
+            # 为微信公众号做一个特别版
+            with open(self.article_path.replace('.md','') + '-weixin-edition.md','w',encoding="UTF-8") as w:
+                w.write(content_w)
+            print('Generated weixin-edition.')
             with open(self.article_path, 'w', encoding='UTF-8') as f:
                 f.write(self.content)
             print('Img urls are successfully replaced.')
         else:
+            with open(self.article_path.replace('.md','') + '-weixin-edition.md','w',encoding="UTF-8") as w:
+                w.write(content_w)
+            print('Generated weixin-edition.')
             print('No img url needs to replace.')
 
 
