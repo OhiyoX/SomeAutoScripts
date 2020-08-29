@@ -31,17 +31,20 @@ except ModuleNotFoundError:
     os._exit(0)
 
 # 配置
-config = {
-    "test_mode": True,  # 调试模式
-    "date": {'year': '2019',  # 设置文件夹日期，留空默认为本年
-             'month': '2' # 设置文件夹日期，留空默认为本月
-             },
-    'clear_local_assets': True,
-    'dir_loc': 'blogimg',  # 设置图床文件夹
-    'style': '!sm',  # 设置默认上传的图片规则，以后缀!标识
-    're_loc': True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
-    'delete': True  # 对于移动图片，是否删除原位置
-}
+# {
+#     "test_mode": True,  # 调试模式
+#     "date": {"year": "2019",  # 设置文件夹日期，留空默认为本年
+#              "month": "1" # 设置文件夹日期，留空默认为本月
+#              },
+#     "clear_local_assets": True,
+#     "dir_loc": "blogimg",  # 设置图床文件夹
+#     "style": "!xwbp",  # 设置默认上传的图片规则，以后缀!标识
+#     "re_loc": True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
+#     "delete": True  # 对于移动图片，是否删除原位置
+# }
+
+with open('config.json') as cfig:
+    config = json.load(cfig)
 
 
 class ImgMD:
@@ -261,7 +264,7 @@ class ImgMD:
                     if bucket.object_exists(remote_img_loc):
                         new_remote_img_loc = self.__concat(self.remote_dir_loc, self.assets_name, img)
                         if remote_img_loc != new_remote_img_loc:
-                            self.img_reloc(remote_img_loc, new_remote_img_loc, delete=config['delete'])
+                            self.img_reloc(remote_img_loc, new_remote_img_loc, delete=config['delete_old_remote'])
 
                 imgs_count += 1
                 continue
@@ -371,27 +374,26 @@ class ImgMD:
             # 替换图片url
             if exist:
                 remote_img_url = remote_img_url.replace('https://', '')
-                content_w = content_w.replace(img_url, 'https://' + quote(remote_img_url) + '!xweixin')
                 self.content = self.content.replace(img_url, 'https://' + quote(remote_img_url) + config['style'])
                 modify_flag = True
+
 
         if modify_flag:
             # 备份原文档
             with open(self.article_path + '-' + str(int(time.time())) + '.original', 'w', encoding="UTF-8") as bkup:
                 bkup.write(content_o)
             # 开始替换图片url
-            # 为微信公众号做一个特别版
-            with open(self.article_path.replace('.md','') + '-weixin-edition.md','w',encoding="UTF-8") as w:
-                w.write(content_w)
-            print('Generated weixin-edition.')
             with open(self.article_path, 'w', encoding='UTF-8') as f:
                 f.write(self.content)
             print('Img urls are successfully replaced.')
         else:
-            with open(self.article_path.replace('.md','') + '-weixin-edition.md','w',encoding="UTF-8") as w:
-                w.write(content_w)
-            print('Generated weixin-edition.')
             print('No img url needs to replace.')
+
+        # 为微信公众号做一个特别版
+        content_w = self.content.replace(config['style'],'!xweixin')
+        with open(self.article_path.replace('.md', '') + '-weixin-edition.md', 'w', encoding="UTF-8") as w:
+            w.write(content_w)
+        print('Generated weixin-edition.')
 
 
 if __name__ == '__main__':
