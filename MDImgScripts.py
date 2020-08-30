@@ -204,10 +204,11 @@ class ImgMD:
             if u_file not in self.imgs_list and file not in self.imgs_list:
                 redundant_list.append(self.assets_path + '\\' + file)
                 flag = True
-        for x in redundant_list:
-            os.remove(x)
-            print(x + " is removed.")
-        if flag == False:
+        if flag:
+            for x in redundant_list:
+                os.remove(x)
+                print(x + " is removed.")
+        else:
             print("Scan finished, no redundant img is found in assets.")
 
     def img_upload(self, img_url='', imgs_url_list='', assets_path='', assets_name=''):
@@ -351,10 +352,10 @@ class ImgMD:
             # 建立连接
             bucket = oss2.Bucket(self.auth, self.endpoint, self.oss_info['Bucket'])
 
-            # 判断图片是否在图床中
             remote_img_loc = self.__concat(remote_dir_loc, self.assets_name, img)
             u_remote_img_loc = self.__concat(remote_dir_loc, quote(self.assets_name), u_img)
 
+            # 判断图片是否在图床中
             exist = bucket.object_exists(remote_img_loc)
             if not exist:
                 exist = bucket.object_exists(u_remote_img_loc)
