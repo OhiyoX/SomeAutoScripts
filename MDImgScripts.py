@@ -375,8 +375,11 @@ class ImgMD:
             # 替换图片url
             if exist:
                 remote_img_url = remote_img_url.replace('https://', '')
-                self.content = self.content.replace(img_url, 'https://' + quote(remote_img_url) + config['style'])
-                modify_flag = True
+                duplicate_verify = 'https://' + quote(remote_img_url) + config['style']
+                if duplicate_verify not in self.content:
+                    self.content = self.content.replace(img_url, 'https://' + quote(remote_img_url) + config['style'])
+                    modify_flag = True
+                    print("replaced")
 
         if modify_flag:
             # 备份原文档
