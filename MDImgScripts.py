@@ -237,6 +237,7 @@ class ImgMD:
                 sys.stdout.flush()
 
         def up(img_path_, remote_img_loc_, img_):
+            # 上传过程的函数，使用断点续传
             if not bucket.object_exists(remote_img_loc_):  # 判断远端文件是否存在
                 oss2.resumable_upload(bucket,
                                       remote_img_loc_,
@@ -270,9 +271,12 @@ class ImgMD:
                 imgs_count += 1
                 continue
             else:
+                # /xxx/xxxx/abc.jpg 格式的路径，不包含根目录
                 remote_img_loc = self.__concat(self.remote_dir_loc, assets_name, img)
                 if 'http' in img_url and '/' in img_url:
+                    # 是网络图片，需要先下载到temp里再上传
                     print('Found web img, re-upload it to Remote.')
+                    # img_path 是图片现在存在的路径
                     img_path = self.img_down(img_url)
                     up(img_path, remote_img_loc, img)
                 else:
@@ -286,6 +290,7 @@ class ImgMD:
 
         if imgs_count == imgs_total:
             print("All imgs are uploaded.")
+            # 清理temp
             if os.path.exists('temp_img/'):
                 for a, b, c in os.walk('temp_img/'):
                     for cc in c:
@@ -300,6 +305,7 @@ class ImgMD:
         print('re_loc process:', end='')
 
         def delete_(remote_img_loc_):
+            # delete 指示是否删除旧位置的文件
             if delete:
                 if bucket.delete_object(remote_img_loc_):
                     print('deleted "' + self.get_name_from_url(remote_img_loc) + '" in original loc.')
@@ -307,6 +313,7 @@ class ImgMD:
                 return False
             p_dir = re.search('(.*)/', remote_img_loc_, re.S).group(1)
             if bucket.delete_object(p_dir):
+                # 清理掉旧的文件夹
                 print('deleted empty loc.')
             return True
 
