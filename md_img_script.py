@@ -36,7 +36,7 @@ except ModuleNotFoundError:
 #     "date": {"year": "2019",  # 设置文件夹日期，留空默认为本年
 #              "month": "1" # 设置文件夹日期，留空默认为本月
 #              },
-#     "clear_local_assets": True,
+#     "clean_local_assets": True,
 #     "dir_loc": "blogimg",  # 设置图床文件夹
 #     "style": "!xwbp",  # 设置默认上传的图片规则，以后缀!标识
 #     "re_loc": True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
@@ -408,8 +408,8 @@ class ImgMD:
 
 if __name__ == '__main__':
     md = ImgMD()
-    if config['clear_local_assets']:
-        md.clear_img()
+    if config['clean_local_assets']:
+        md.clean_img()
     opt = input('upload images? y/n.: ')
     if opt == 'y':
         result = md.img_upload()
