@@ -195,7 +195,7 @@ class ImgMD:
             # return re.search('(.*)/',img_url,re.S).group(1)
             return img_url
 
-    def clear_img(self):
+    def clean_img(self):
         """用于清除文件夹中无用的图片"""
         flag = False
         redundant_list = []
@@ -410,7 +410,11 @@ if __name__ == '__main__':
     md = ImgMD()
     if config['clear_local_assets']:
         md.clear_img()
-    result = md.img_upload()
+    opt = input('upload images? y/n.: ')
+    if opt == 'y':
+        result = md.img_upload()
+    else:
+        result = False
     if result:
         md.replace_img_url()
     xx = input('Enter anything to exit.')
