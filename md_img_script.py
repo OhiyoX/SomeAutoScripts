@@ -22,13 +22,13 @@ try:
     import oss2
 except ModuleNotFoundError:
     print('Oss2 Module not found, try "pip install oss2". ')
-    os._exit(0)
+    exit(0)
 
 try:
     import requests
 except ModuleNotFoundError:
     print('requests Module not found, try "pip install requests".')
-    os._exit(0)
+    exit(0)
 
 # 配置
 # {
@@ -112,7 +112,7 @@ class ImgMD:
                     print("Notice! File not found or there is an error, retry.")
                     count += 1
                     if count > 5:
-                        os._exit(0)
+                        exit(0)
                         return None
 
     def get_imgs_list(self, url=False, force=False):
@@ -160,8 +160,7 @@ class ImgMD:
                 print(Exception)
                 count += 1
                 if count > 5:
-                    os._exit(0)
-                    return None
+                    exit(-1)
 
     def get_name_from_url(self, img_url):
         if 'http' in img_url and '/' in img_url:
@@ -417,6 +416,5 @@ if __name__ == '__main__':
         result = False
     if result:
         md.replace_img_url()
-    xx = input('Enter anything to exit.')
-    if xx:
-        os._exit(0)
+    if input('Enter anything to exit.'):
+        exit(0)

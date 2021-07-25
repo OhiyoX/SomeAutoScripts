@@ -3,7 +3,7 @@
     "date": {"year": "",
              "month": ""
              },
-    "clear_local_assets": true,
+    "clean_local_assets": true,
     "dir_loc": "blogimg",
     "style": "!xwbp",
     "weixin": "!xweixin",
