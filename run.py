@@ -238,13 +238,14 @@ class ImgMD:
         def up(img_path_, remote_img_loc_, img_):
             # 上传过程的函数，使用断点续传
             if not bucket.object_exists(remote_img_loc_):  # 判断远端文件是否存在
-                oss2.resumable_upload(bucket,
-                                      remote_img_loc_,
-                                      img_path_,
-                                      multipart_threshold=200 * 1024,
-                                      part_size=100 * 1024,
-                                      num_threads=3,
-                                      progress_callback=percentage)
+                oss2.resumable_upload(
+                    bucket,
+                    remote_img_loc_,
+                    img_path_,
+                    multipart_threshold=200 * 1024,
+                    part_size=100 * 1024,
+                    num_threads=3,
+                    progress_callback=percentage)
                 print(', ' + img_ + ' is successfully uploaded.')
             else:
                 print(img_ + " already exists, ignore it.")
@@ -349,8 +350,8 @@ class ImgMD:
         imgs_url_list = self.get_imgs_list(force=False, url=True)
         remote_domain_prefix = self.__concat(self.bucket_domain, remote_dir_loc)
         modify_flag = False
-        content_o = self.content # 原内容
-        content_w = self.content # 微信内容
+        content_o = self.content  # 原内容
+        content_w = self.content  # 微信内容
         for img_url in imgs_url_list:
             img = unquote(self.get_name_from_url(img_url))
             u_img = quote(img)
@@ -399,7 +400,7 @@ class ImgMD:
             print('No img url needs to replace.')
 
         # 为微信公众号做一个特别版
-        content_w = self.content.replace(config['style'],config['weixin'])
+        content_w = self.content.replace(config['style'], config['weixin'])
         with open(self.article_path.replace('.md', '') + '-weixin-edition.md', 'w', encoding="UTF-8") as w:
             w.write(content_w)
         print('Generated weixin-edition.')
