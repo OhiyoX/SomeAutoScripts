@@ -145,7 +145,7 @@ class ImgMD:
         while not bar and count <= 5:
             try:
                 if not config['test_mode']:
-                    self.assets_path = input("input the imgs path（Leave it empty to use default folder）: \n")
+                    self.assets_path = input("input the imgs path (Leave it empty to use default folder): ")
                     if self.assets_path == '':
                         self.assets_path = self.article_path.replace('.md', '.assets')
                 for a, b, c in os.walk(self.assets_path):
