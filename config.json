@@ -1,7 +1,7 @@
 {
     "test_mode": false,
-    "date": {"year": "",
-             "month": ""
+    "date": {"year": "2019",
+             "month": "01"
              },
     "clean_local_assets": true,
     "dir_loc": "blogimg",

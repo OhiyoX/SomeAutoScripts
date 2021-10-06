@@ -417,5 +417,3 @@ if __name__ == '__main__':
         result = False
     if result:
         md.replace_img_url()
-    if input('Enter anything to exit.'):
-        exit(0)

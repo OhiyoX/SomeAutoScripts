@@ -1,12 +1,12 @@
 {
     "test_mode": false,
-    "date": {"year": "2019",
-             "month": "04"
+    "date": {"year": "",
+             "month": ""
              },
     "clean_local_assets": true,
     "dir_loc": "blogimg",
-    "style": "!xwbp",
-    "weixin": "!xweixin",
+    "style": "!xwbp.webp",
+    "weixin": "!xweixin.webp",
     "re_loc": true,
     "delete_old_remote": true
 }
