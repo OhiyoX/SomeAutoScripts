@@ -77,16 +77,16 @@ class ImgMD:
         self.bucket_domain = 'https://' + self.oss_info['EndPoint'].replace('https://', self.oss_info['Bucket'] + '.')
 
         date_format = input('Set date format(YYYY.MM): ') or f"{config['date']['year']}.{config['date']['month']}"
-        print(f'date format: {date_format}')
         year, month = date_format.split('.')
 
         # 设置远端时间文件夹，如/2020/08/的格式
         localtime = time.localtime()
         year = str(localtime.tm_year) if not year else year
-        mon = str(localtime.tm_mon) if not month else month
-        if int(mon) < 10:
-            mon = '0' + str(int(mon))
-        self.remote_main_oss_folder_ref = '/'.join([config['main_oss_folder_ref'], year, mon])
+        month = str(localtime.tm_mon) if not month else month
+        if int(month) < 10:
+            month = '0' + str(int(month))
+        self.remote_main_oss_folder_ref = '/'.join([config['main_oss_folder_ref'], year, month])
+        print(f'date format: {year}.{month}')
 
     def get_content(self, article_filepath="", force=False):
         """获得文本内容"""
@@ -95,25 +95,26 @@ class ImgMD:
         else:
             foo = False
             count = 0
-            while not foo and count <= 5:
-                try:
-                    if not config['test_mode']:
-                        if not article_filepath:
-                            self.article_filepath = input("Input the article path: ").strip('\"')
-                            if "\"" in self.article_filepath:
-                                self.article_filepath = re.search("\"(.*)\"", self.article_filepath).group(1)
+            while not foo:
+                if count <= 5:
+                    try:
+                        if not config['test_mode']:
+                            if not article_filepath:
+                                self.article_filepath = input("Input the article path: ").strip('\"')
+                                if "\"" in self.article_filepath:
+                                    self.article_filepath = re.search("\"(.*)\"", self.article_filepath).group(1)
+                                article_filepath = self.article_filepath
+                        else:
                             article_filepath = self.article_filepath
-                    else:
-                        article_filepath = self.article_filepath
-                    with open(article_filepath, 'r', encoding="UTF-8") as f:
-                        self.content = f.read()
-                    foo = True
-                    return self.content
-                except:
-                    print("Notice! File is not found or an error occurs, retry.")
-                    count += 1
-                    if count > 5:
-                        exit(0)
+                        with open(article_filepath, 'r', encoding="UTF-8") as f:
+                            self.content = f.read()
+                        foo = True
+                        return self.content
+                    except:
+                        print("Notice! File is not found or an error occurs, retry.")
+                        count += 1
+                else:
+                    exit('failed getting article file path.')
 
     def get_doc_imgs_list(self, url=False, force=False):
         """获得文档中的图片列表"""
@@ -124,11 +125,11 @@ class ImgMD:
                 return self.imgs_url_list
 
         content = self.get_content(force=force)
-        self.imgs_url_list = re.findall('!\[.*?\]\((.*?)\)', content, re.S)
+        self.imgs_url_list = re.findall('!\[.*?]\((.*?)\)', content, re.S)
         imgs_list = []
         for img_url in self.imgs_url_list:
-            img = self.get_filename_from_url(img_url)  # 不支持绝对路径
-            imgs_list.append(img)
+            img_full_name = self.get_filename_from_url(img_url)  # 不支持绝对路径
+            imgs_list.append(img_full_name)
         if not url:
             print("Done, %s img(s) found in article." % len(imgs_list))
             for i, img in enumerate(imgs_list):
@@ -393,7 +394,7 @@ class ImgMD:
             # 备份原文档
             original_fn, original_ext = os.path.splitext(self.article_filepath)
             with open(
-                    f"{original_fn}'-'{datetime.now().strftime('%Y%m%d%H%M%S')}'-original'{original_ext}",
+                    f"{original_fn}-{datetime.now().strftime('%Y%m%d%H%M%S')}-original{original_ext}",
                     'w',
                     encoding="UTF-8"
             ) as bkup:
