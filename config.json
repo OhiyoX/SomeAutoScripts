@@ -4,9 +4,9 @@
              "month": ""
              },
     "clean_local_assets": true,
-    "dir_loc": "blogimg",
+    "main_OSS_folder_ref": "blogimg",
     "style": "!xwbp.webp",
     "weixin": "!xweixin.webp",
-    "re_loc": true,
-    "delete_old_remote": true
+    "relocate_OSS_existing_file": true,
+    "delete_old_OSS_existing_file": true
 }

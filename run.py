@@ -18,6 +18,8 @@ import sys
 import time
 from urllib.parse import quote, unquote
 
+from datetime import datetime
+
 # 阿里云OSS的SDK
 try:
     import oss2
@@ -38,9 +40,9 @@ except ModuleNotFoundError:
 #              "month": "1" # 设置文件夹日期，留空默认为本月
 #              },
 #     "clean_local_assets": True,
-#     "dir_loc": "blogimg",  # 设置图床文件夹
+#     "main_OSS_folder_ref": "blogimg",  # 设置图床文件夹
 #     "style": "!xwbp",  # 设置默认上传的图片规则，以后缀!标识
-#     "re_loc": True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
+#     "relocate_OSS_existing_file": True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
 #     "delete": True  # 对于移动图片，是否删除原位置
 # }
 
@@ -53,8 +55,8 @@ class ImgMD:
 
     def __init__(self):
         # 与MD文档有关的
-        self.article_path = None
-        self.assets_path = None
+        self.article_filepath = None
+        self.assets_dirpath = None
         self.content = ""
         # 文档中的图片信息
         self.imgs_list = []
@@ -75,6 +77,7 @@ class ImgMD:
         self.bucket_domain = 'https://' + self.oss_info['EndPoint'].replace('https://', self.oss_info['Bucket'] + '.')
 
         date_format = input('Set date format(YYYY.MM): ') or f"{config['date']['year']}.{config['date']['month']}"
+        print(f'date format: {date_format}')
         year, month = date_format.split('.')
 
         # 设置远端时间文件夹，如/2020/08/的格式
@@ -83,10 +86,9 @@ class ImgMD:
         mon = str(localtime.tm_mon) if not month else month
         if int(mon) < 10:
             mon = '0' + str(int(mon))
-        self.remote_dir_loc = '/'.join([config['dir_loc'], year, mon])
+        self.remote_main_OSS_folder_ref = '/'.join([config['main_OSS_folder_ref'], year, mon])
 
-
-    def get_content(self, article_path="", force=False):
+    def get_content(self, article_filepath="", force=False):
         """获得文本内容"""
         if self.content and not force:
             return self.content
@@ -96,14 +98,14 @@ class ImgMD:
             while not foo and count <= 5:
                 try:
                     if not config['test_mode']:
-                        if not article_path:
-                            self.article_path = input("Input the article path: ").strip('\"')
-                            if "\"" in self.article_path:
-                                self.article_path = re.search("\"(.*)\"", self.article_path).group(1)
-                            article_path = self.article_path
+                        if not article_filepath:
+                            self.article_filepath = input("Input the article path: ").strip('\"')
+                            if "\"" in self.article_filepath:
+                                self.article_filepath = re.search("\"(.*)\"", self.article_filepath).group(1)
+                            article_filepath = self.article_filepath
                     else:
-                        article_path = self.article_path
-                    with open(article_path, 'r', encoding="UTF-8") as f:
+                        article_filepath = self.article_filepath
+                    with open(article_filepath, 'r', encoding="UTF-8") as f:
                         self.content = f.read()
                     foo = True
                     return self.content
@@ -129,7 +131,7 @@ class ImgMD:
             imgs_list.append(img)
         if not url:
             print("Done, %s img(s) found in article." % len(imgs_list))
-            for i,img in enumerate(imgs_list):
+            for i, img in enumerate(imgs_list):
                 print(f"{i}: {img}")
 
             self.imgs_list = imgs_list
@@ -144,14 +146,14 @@ class ImgMD:
         while not bar and count <= 5:
             try:
                 if not config['test_mode']:
-                    self.assets_path = input("input the imgs path (Leave it empty to use default folder): ")
-                    if self.assets_path == '':
-                        self.assets_path = self.article_path.replace('.md', '.assets')
-                for a, b, c in os.walk(self.assets_path):
+                    self.assets_dirpath = input("input the imgs path (Leave it empty to use default folder): ")
+                    if self.assets_dirpath == '':
+                        self.assets_dirpath = self.article_filepath.replace('.md', '.assets')
+                for a, b, c in os.walk(self.assets_dirpath):
                     assets_list = c
                     print("Done, %s img(s) found in assets." % len(assets_list))
                     print('As below:')
-                    for i,a in enumerate(assets_list):
+                    for i, a in enumerate(assets_list):
                         print(f"{i}: {a}")
                     self.assets_list = assets_list
                     return assets_list
@@ -170,38 +172,36 @@ class ImgMD:
                 img_info = re.search('https://mmbiz.qpic.cn/(.*)', img_url).group(1)
                 img_name = re.search('.*/(.*)/', img_info, re.S).group(1)
                 img_format = re.search('.*=(.*)', img_info, re.S).group(1)
-                img = img_name + '.' + img_format
-                return img
+                img_full_name = img_name + '.' + img_format
+                return img_full_name
             elif '?' in img_url:
                 # 针对其他图床的?规则
-                img = re.search('.*/(.*?)\?', img_url, re.S).group(1)
-                return img
+                img_full_name = re.search('.*/(.*?)\?', img_url, re.S).group(1)
+                return img_full_name
             else:
-                img = re.search('.*/(.*)', img_url).group(1)
+                img_full_name = re.search('.*/(.*)', img_url).group(1)
                 if '!' in img_url:
                     # 针对!规则
-                    img = re.search('(.*)!.*', img, re.S).group(1)
-                return img
+                    img_full_name = re.search('(.*)!.*', img_full_name, re.S).group(1)
+                return img_full_name
         else:
-            img = re.search('.*/(.*)', img_url).group(1)
-            return img
+            img_full_name = re.search('.*/(.*)', img_url).group(1)
+            return img_full_name
 
-    def get_dirpath_from_url(self, img_url):
-        if 'http' in img_url and '/' in img_url:
-            if '!' in img_url:
-                return re.search('\..*?/(.*)!', img_url, re.S).group(1)
+    def get_bucket_ref_from_url(self, img_url):
+        if 'http' in img_url:
+            return re.search('\..*?/(.*)[!]?', img_url, re.S)[1]
         else:
-            # return re.search('(.*)/',img_url,re.S).group(1)
             return img_url
 
-    def clean_local_imgs(self):
+    def clear_local_imgs(self):
         """用于清除文件夹中无用的图片"""
         flag = False
         redundant_list = []
         for file in self.assets_list:
             u_file = quote(file)  # typora中使用了unicode-escape
             if u_file not in self.imgs_list and file not in self.imgs_list:
-                redundant_list.append(self.assets_path + '\\' + file)
+                redundant_list.append(self.assets_dirpath + '\\' + file)
                 flag = True
         if flag:
             for x in redundant_list:
@@ -210,7 +210,7 @@ class ImgMD:
         else:
             print("Scan finished, no redundant img is found in assets.")
 
-    def img_upload(self, img_url='', imgs_url_list='', assets_path='', assets_name=''):
+    def img_upload(self, img_url='', imgs_url_list='', assets_dirpath='', assets_name=''):
         """用于批量上传图片"""
         print('------uploading process------')
         # 建立远端连接
@@ -221,11 +221,11 @@ class ImgMD:
             if imgs_url_list:
                 print('Error, you can only set img_url or imgs_url_list.')
             url_list.append(img_url)
-        if not assets_path:
-            assets_path = self.assets_path
+        if not assets_dirpath:
+            assets_dirpath = self.assets_dirpath
         # 设置上传的文件夹名字
         if not assets_name:
-            assets_name = re.search('.*\\\(.*)', assets_path, re.S).group(1)
+            assets_name = re.search('.*\\\(.*)', assets_dirpath, re.S).group(1)
             self.assets_name = assets_name
 
         # progress_callback为可选参数，用于实现进度条功能
@@ -235,20 +235,20 @@ class ImgMD:
                 print('\r{0}% '.format(rate), end='')
                 sys.stdout.flush()
 
-        def upload(img_path_, remote_img_loc_, img_):
+        def upload(img_path_, remote_img_ref, img_full_filename):
             # 上传过程的函数，使用断点续传
-            if not bucket.object_exists(remote_img_loc_):  # 判断远端文件是否存在
+            if not bucket.object_exists(remote_img_ref):  # 判断远端文件是否存在
                 oss2.resumable_upload(
                     bucket,
-                    remote_img_loc_,
+                    remote_img_ref,
                     img_path_,
                     multipart_threshold=200 * 1024,
                     part_size=100 * 1024,
                     num_threads=3,
                     progress_callback=percentage)
-                print(', ' + img_ + ' is successfully uploaded.')
+                print(', ' + img_full_filename + ' is successfully uploaded.')
             else:
-                print(img_ + " already exists, ignore it.")
+                print(img_full_filename + " already exists, ignore it.")
 
         bucket = oss2.Bucket(self.auth, self.endpoint, self.oss_info['Bucket'])
 
@@ -261,29 +261,27 @@ class ImgMD:
             if self.bucket_domain in img_url:  # 判断是否在图床
                 print("\"" + img + "\" is already in remote, no need to upload.")
                 # 移动图片在图床中的位置
-                if config['re_loc']:
-                    remote_img_loc = self.get_dirpath_from_url(img_url)
-                    if bucket.object_exists(remote_img_loc):
-                        new_remote_img_loc = '/'.join([self.remote_dir_loc, self.assets_name, img])
-                        if remote_img_loc != new_remote_img_loc:
-                            self.img_reloc(remote_img_loc, new_remote_img_loc, delete=config['delete_old_remote'])
-
-                imgs_count += 1
-                continue
+                if config['relocate_OSS_existing_file']:
+                    remote_img_ref = self.get_bucket_ref_from_url(img_url)
+                    if bucket.object_exists(remote_img_ref):
+                        new_remote_img_ref = '/'.join([self.remote_main_OSS_folder_ref, self.assets_name, img])
+                        if remote_img_ref != new_remote_img_ref:
+                            self.img_relocate(remote_img_ref, new_remote_img_ref,
+                                              delete=config['delete_old_OSS_existing_file'])
             else:
                 # /xxx/xxxx/abc.jpg 格式的路径，不包含根目录
-                remote_img_loc = '/'.join([self.remote_dir_loc, assets_name, img])
+                remote_img_ref = '/'.join([self.remote_main_OSS_folder_ref, assets_name, img])
                 if 'http' in img_url and '/' in img_url:
                     # 是网络图片，需要先下载到temp里再上传
                     print('Found web img, re-upload it to Remote.')
                     # img_path 是图片现在存在的路径
-                    img_path = self.img_down(img_url)
-                    upload(img_path, remote_img_loc, img)
+                    img_path = self.img_download(img_url)
+                    upload(img_path, remote_img_ref, img)
                 else:
                     if img in self.assets_list:
-                        img_path = assets_path + '\\' + img
+                        img_path = assets_dirpath + '\\' + img
 
-                        upload(img_path, remote_img_loc, img)
+                        upload(img_path, remote_img_ref, img)
                     else:
                         print("Img is not found in .assets, so I can't upload it.")
             imgs_count += 1
@@ -297,34 +295,34 @@ class ImgMD:
         else:
             return False
 
-    def img_reloc(self, remote_img_loc, new_remote_img_loc, delete=True):
+    def img_relocate(self, remote_img_ref, new_remote_img_ref, delete=True):
         """将图床图片移动到合适位置"""
-        print('re_loc process:', end='')
+        print('relocate_OSS_existing_file process:', end='')
 
-        def delete_(remote_img_loc_):
+        def delete_(_remote_img_ref):
             # delete 指示是否删除旧位置的文件
             if delete:
-                if bucket.delete_object(remote_img_loc_):
-                    print('deleted "' + self.get_filename_from_url(remote_img_loc) + '" in original loc.')
+                if bucket.delete_object(_remote_img_ref):
+                    print('deleted "' + self.get_filename_from_url(_remote_img_ref) + '" in original loc.')
                     return True
                 return False
-            p_dir = re.search('(.*)/', remote_img_loc_, re.S).group(1)
+            p_dir = re.search('(.*)/', _remote_img_ref, re.S).group(1)
             if bucket.delete_object(p_dir):
                 # 清理掉旧的文件夹
                 print('deleted empty loc.')
             return True
 
         bucket = oss2.Bucket(self.auth, self.endpoint, self.oss_info['Bucket'])
-        exist = bucket.object_exists(new_remote_img_loc)
+        exist = bucket.object_exists(new_remote_img_ref)
         if exist:
-            return delete_(remote_img_loc)
+            return delete_(remote_img_ref)
         else:
-            if bucket.copy_object(self.oss_info['Bucket'], remote_img_loc, new_remote_img_loc):
-                return delete_(remote_img_loc)
+            if bucket.copy_object(self.oss_info['Bucket'], remote_img_ref, new_remote_img_ref):
+                return delete_(remote_img_ref)
             else:
                 return False
 
-    def img_down(self, img_url):
+    def img_download(self, img_url):
         headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36 Edg/94.0.992.38'
         }
@@ -332,43 +330,43 @@ class ImgMD:
         """将网络上的图片转到图床里"""
         if not os.path.exists(self.temp_dir):
             os.mkdir(self.temp_dir)
-        response = requests.get(img_url,headers=headers)
+        response = requests.get(img_url, headers=headers)
         if response.status_code == 200:
             img_name = self.get_filename_from_url(img_url)
-            temp_img_path = '/'.join([self.temp_dir,img_name])
-            with open(temp_img_path, 'wb') as f:
+            temp_img_filepath = '/'.join([self.temp_dir, img_name])
+            with open(temp_img_filepath, 'wb') as f:
                 f.write(response.content)
-            return temp_img_path
+            return temp_img_filepath
         else:
             print(f"error: {response.status_code}")
         return None
 
-    def replace_img_url(self, remote_dir_loc=''):
+    def replace_img_url(self, remote_main_oss_folder_ref=''):
         """用于更换文章中的图片地址"""
         print('------replacing urls process------')
-        if remote_dir_loc == '':
-            remote_dir_loc = self.remote_dir_loc
+        if remote_main_oss_folder_ref == '':
+            remote_main_oss_folder_ref = self.remote_main_OSS_folder_ref
 
         # 判断图片是否已在图床中
         imgs_url_list = self.get_doc_imgs_list(url=True, force=False)
-        remote_domain_prefix = '/'.join([self.bucket_domain, remote_dir_loc])
+        remote_domain_prefix = '/'.join([self.bucket_domain, remote_main_oss_folder_ref])
         modify_flag = False
         content_o = self.content  # 原内容
         content_w = self.content  # 微信内容
-        for index,img_url in enumerate(imgs_url_list):
+        for index, img_url in enumerate(imgs_url_list):
             img_name = unquote(self.get_filename_from_url(img_url))
-            u_img_name = quote(img_name).replace("%5C",'/')
+            u_img_name = quote(img_name).replace("%5C", '/')
 
             # 建立连接
             bucket = oss2.Bucket(self.auth, self.endpoint, self.oss_info['Bucket'])
 
-            remote_img_loc = '/'.join([remote_dir_loc, self.assets_name, img_name])
-            u_remote_img_loc = '/'.join([remote_dir_loc, quote(self.assets_name), u_img_name])
+            remote_img_ref = '/'.join([remote_main_oss_folder_ref, self.assets_name, img_name])
+            u_remote_img_ref = '/'.join([remote_main_oss_folder_ref, quote(self.assets_name), u_img_name])
 
             # 判断图片是否在图床中
-            exist = bucket.object_exists(remote_img_loc)
+            exist = bucket.object_exists(remote_img_ref)
             if not exist:
-                exist = bucket.object_exists(u_remote_img_loc)
+                exist = bucket.object_exists(u_remote_img_ref)
 
             remote_img_url = '/'.join([remote_domain_prefix, self.assets_name, img_name])
             u_remote_img_url = '/'.join([remote_domain_prefix, quote(self.assets_name), u_img_name])
@@ -393,10 +391,15 @@ class ImgMD:
 
         if modify_flag:
             # 备份原文档
-            with open(self.article_path + '-' + str(int(time.time())) + '.original', 'w', encoding="UTF-8") as bkup:
+            original_fn, original_ext = os.path.splitext(self.article_filepath)
+            with open(
+                    f"{original_fn}'-'{datetime.now().strftime('%Y%m%d%H%M%S')}'-original'{original_ext}",
+                    'w',
+                    encoding="UTF-8"
+            ) as bkup:
                 bkup.write(content_o)
             # 开始替换图片url
-            with open(self.article_path, 'w', encoding='UTF-8') as f:
+            with open(self.article_filepath, 'w', encoding='UTF-8') as f:
                 f.write(self.content)
             print('Img urls are successfully replaced.')
         else:
@@ -404,7 +407,7 @@ class ImgMD:
 
         # 为微信公众号做一个特别版
         content_w = self.content.replace(config['style'], config['weixin'])
-        with open(self.article_path.replace('.md', '') + '-weixin-edition.md', 'w', encoding="UTF-8") as w:
+        with open(self.article_filepath.replace('.md', '') + '-weixin-edition.md', 'w', encoding="UTF-8") as w:
             w.write(content_w)
         print('Generated weixin-edition.')
 
@@ -412,9 +415,9 @@ class ImgMD:
 if __name__ == '__main__':
     md = ImgMD()
     if config['clean_local_assets']:
-        md.clean_local_imgs()
+        md.clear_local_imgs()
     opt = input('upload images? y/n.: ')
-    if opt.lower() in ['y','yes']:
+    if opt.lower() in ['y', 'yes']:
         result = md.img_upload()
     else:
         result = False
