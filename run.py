@@ -112,7 +112,6 @@ class ImgMD:
                     count += 1
                     if count > 5:
                         exit(0)
-                        return None
 
     def get_doc_imgs_list(self, url=False, force=False):
         """获得文档中的图片列表"""
