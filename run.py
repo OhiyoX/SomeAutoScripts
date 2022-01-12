@@ -260,7 +260,7 @@ class ImgMD:
             img_url = unquote(img_url)
             img_full_name = self.get_filename_from_url(img_url)
             if self.bucket_domain in img_url:  # 判断是否在图床
-                print("\"" + img_full_name + "\" is already in remote, no need to upload.")
+                print(f"[{img_full_name}] is already in remote, no need to upload.")
                 # 移动图片在图床中的位置
                 if config['relocate_oss_existing_file']:
                     remote_img_ref = self.get_bucket_ref_from_url(img_url)
@@ -274,7 +274,7 @@ class ImgMD:
                 remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, assets_name, img_full_name])
                 if 'http' in img_url and '/' in img_url:
                     # 是网络图片，需要先下载到temp里再上传
-                    print('Found web img, re-upload it to Remote.')
+                    print('Found web img, re-upload it to remote.')
                     # img_path 是图片现在存在的路径
                     img_filepath = self.img_download(img_url)
                     upload(img_filepath, remote_img_ref, img_full_name)
@@ -284,11 +284,11 @@ class ImgMD:
 
                         upload(img_filepath, remote_img_ref, img_full_name)
                     else:
-                        print("Img is not found in .assets, so I can't upload it.")
+                        print("img is not found in .assets, so I can't upload it.")
             imgs_count += 1
 
         if imgs_count == imgs_total:
-            print("All imgs are uploaded.")
+            print("all imgs are uploaded.")
             # 清理temp
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -402,15 +402,15 @@ class ImgMD:
             # 开始替换图片url
             with open(self.article_filepath, 'w', encoding='UTF-8') as f:
                 f.write(self.content)
-            print('Img urls are successfully replaced.')
+            print('img urls are successfully replaced.')
         else:
-            print('No img url needs to replace.')
+            print('no img url needs to replace.')
 
         # 为微信公众号做一个特别版
         content_w = self.content.replace(config['style'], config['weixin'])
         with open(self.article_filepath.replace('.md', '') + '-weixin-edition.md', 'w', encoding="UTF-8") as w:
             w.write(content_w)
-        print('Generated weixin-edition.')
+        print('generated weixin-edition.')
 
 
 if __name__ == '__main__':
