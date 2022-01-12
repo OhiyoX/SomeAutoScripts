@@ -40,9 +40,9 @@ except ModuleNotFoundError:
 #              "month": "1" # 设置文件夹日期，留空默认为本月
 #              },
 #     "clean_local_assets": True,
-#     "main_OSS_folder_ref": "blogimg",  # 设置图床文件夹
+#     "main_oss_folder_ref": "blogimg",  # 设置图床文件夹
 #     "style": "!xwbp",  # 设置默认上传的图片规则，以后缀!标识
-#     "relocate_OSS_existing_file": True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
+#     "relocate_oss_existing_file": True,  # 对于已在图床中的图片，设置是否需要重新移动整理图片
 #     "delete": True  # 对于移动图片，是否删除原位置
 # }
 
@@ -86,7 +86,7 @@ class ImgMD:
         mon = str(localtime.tm_mon) if not month else month
         if int(mon) < 10:
             mon = '0' + str(int(mon))
-        self.remote_main_OSS_folder_ref = '/'.join([config['main_OSS_folder_ref'], year, mon])
+        self.remote_main_oss_folder_ref = '/'.join([config['main_oss_folder_ref'], year, mon])
 
     def get_content(self, article_filepath="", force=False):
         """获得文本内容"""
@@ -261,16 +261,16 @@ class ImgMD:
             if self.bucket_domain in img_url:  # 判断是否在图床
                 print("\"" + img + "\" is already in remote, no need to upload.")
                 # 移动图片在图床中的位置
-                if config['relocate_OSS_existing_file']:
+                if config['relocate_oss_existing_file']:
                     remote_img_ref = self.get_bucket_ref_from_url(img_url)
                     if bucket.object_exists(remote_img_ref):
-                        new_remote_img_ref = '/'.join([self.remote_main_OSS_folder_ref, self.assets_name, img])
+                        new_remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, self.assets_name, img])
                         if remote_img_ref != new_remote_img_ref:
                             self.img_relocate(remote_img_ref, new_remote_img_ref,
-                                              delete=config['delete_old_OSS_existing_file'])
+                                              delete=config['delete_old_oss_existing_file'])
             else:
                 # /xxx/xxxx/abc.jpg 格式的路径，不包含根目录
-                remote_img_ref = '/'.join([self.remote_main_OSS_folder_ref, assets_name, img])
+                remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, assets_name, img])
                 if 'http' in img_url and '/' in img_url:
                     # 是网络图片，需要先下载到temp里再上传
                     print('Found web img, re-upload it to Remote.')
@@ -297,7 +297,7 @@ class ImgMD:
 
     def img_relocate(self, remote_img_ref, new_remote_img_ref, delete=True):
         """将图床图片移动到合适位置"""
-        print('relocate_OSS_existing_file process:', end='')
+        print('relocate_oss_existing_file process:', end='')
 
         def delete_(_remote_img_ref):
             # delete 指示是否删除旧位置的文件
@@ -345,7 +345,7 @@ class ImgMD:
         """用于更换文章中的图片地址"""
         print('------replacing urls process------')
         if remote_main_oss_folder_ref == '':
-            remote_main_oss_folder_ref = self.remote_main_OSS_folder_ref
+            remote_main_oss_folder_ref = self.remote_main_oss_folder_ref
 
         # 判断图片是否已在图床中
         imgs_url_list = self.get_doc_imgs_list(url=True, force=False)

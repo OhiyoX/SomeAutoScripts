@@ -4,9 +4,9 @@
              "month": ""
              },
     "clean_local_assets": true,
-    "main_OSS_folder_ref": "blogimg",
+    "main_oss_folder_ref": "blogimg",
     "style": "!xwbp.webp",
     "weixin": "!xweixin.webp",
-    "relocate_OSS_existing_file": true,
-    "delete_old_OSS_existing_file": true
+    "relocate_oss_existing_file": true,
+    "delete_old_oss_existing_file": true
 }
