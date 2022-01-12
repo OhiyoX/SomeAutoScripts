@@ -258,31 +258,31 @@ class ImgMD:
         imgs_count = 0
         for img_url in url_list:
             img_url = unquote(img_url)
-            img = self.get_filename_from_url(img_url)
+            img_full_name = self.get_filename_from_url(img_url)
             if self.bucket_domain in img_url:  # 判断是否在图床
-                print("\"" + img + "\" is already in remote, no need to upload.")
+                print("\"" + img_full_name + "\" is already in remote, no need to upload.")
                 # 移动图片在图床中的位置
                 if config['relocate_oss_existing_file']:
                     remote_img_ref = self.get_bucket_ref_from_url(img_url)
                     if bucket.object_exists(remote_img_ref):
-                        new_remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, self.assets_name, img])
+                        new_remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, self.assets_name, img_full_name])
                         if remote_img_ref != new_remote_img_ref:
                             self.img_relocate(remote_img_ref, new_remote_img_ref,
                                               delete=config['delete_old_oss_existing_file'])
             else:
                 # /xxx/xxxx/abc.jpg 格式的路径，不包含根目录
-                remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, assets_name, img])
+                remote_img_ref = '/'.join([self.remote_main_oss_folder_ref, assets_name, img_full_name])
                 if 'http' in img_url and '/' in img_url:
                     # 是网络图片，需要先下载到temp里再上传
                     print('Found web img, re-upload it to Remote.')
                     # img_path 是图片现在存在的路径
-                    img_path = self.img_download(img_url)
-                    upload(img_path, remote_img_ref, img)
+                    img_filepath = self.img_download(img_url)
+                    upload(img_filepath, remote_img_ref, img_full_name)
                 else:
-                    if img in self.assets_list:
-                        img_path = assets_dirpath + '\\' + img
+                    if img_full_name in self.assets_list:
+                        img_filepath = assets_dirpath + '\\' + img_full_name
 
-                        upload(img_path, remote_img_ref, img)
+                        upload(img_filepath, remote_img_ref, img_full_name)
                     else:
                         print("Img is not found in .assets, so I can't upload it.")
             imgs_count += 1
