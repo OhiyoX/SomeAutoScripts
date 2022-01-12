@@ -74,7 +74,7 @@ class ImgMD:
             self.oss_info = json.load(f)
         self.auth = oss2.Auth(self.oss_info['AccessKeyId'], self.oss_info['AccessKeySecret'])
         self.endpoint = self.oss_info['EndPoint']
-        self.bucket_domain = 'https://' + self.oss_info['EndPoint'].replace('https://', self.oss_info['Bucket'] + '.')
+        self.bucket_domain = self.oss_info['EndPoint'].replace('https://', 'https://' + self.oss_info['Bucket'] + '.')
 
         date_format = input('Set date format(YYYY.MM): ') or f"{config['date']['year']}.{config['date']['month']}"
         year, month = date_format.split('.')
